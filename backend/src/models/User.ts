@@ -1,6 +1,20 @@
-import mongoose from "mongoose";
 import { randomUUID } from "crypto";
-const chatSchema = new mongoose.Schema({
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface Chat {
+  id: string;
+  role: string;
+  content: string;
+}
+
+export interface UserDocument extends Document {
+  name: string;
+  email: string;
+  password: string;
+  chats: Chat[];
+}
+
+const chatSchema = new Schema<Chat>({
   id: {
     type: String,
     default: randomUUID(),
@@ -14,7 +28,8 @@ const chatSchema = new mongoose.Schema({
     required: true,
   },
 });
-const userSchema = new mongoose.Schema({
+
+const userSchema = new Schema<UserDocument>({
   name: {
     type: String,
     required: true,
@@ -31,4 +46,4 @@ const userSchema = new mongoose.Schema({
   chats: [chatSchema],
 });
 
-export default mongoose.model("User", userSchema);
+export default mongoose.model<UserDocument>("User", userSchema);
