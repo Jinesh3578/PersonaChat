@@ -2,10 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import User, { UserDocument, Chat } from "../models/User.js";
 import { randomUUID } from "crypto";
 import { configureGoogleAI } from "../config/gemini-config.js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
-
-// Controller functions
 export const generateChatCompletion = async (
   req: Request,
   res: Response,
@@ -23,17 +20,26 @@ export const generateChatCompletion = async (
       id: randomUUID(),
       role: "user",
       content: message,
+      persona: user.persona,
     };
 
     // Push new chat entry to user's chats array
     user.chats.push(newChat);
+
+    // Prepare prompt based on persona
+    let personaPrompt = "";
+    if (user.persona === "custom") {
+      personaPrompt = user.customPrompt;
+    } else {
+      personaPrompt = `You are a ${user.persona} personality.`;
+    }
 
     // Send all chats with new one to Google AI API
     const client = configureGoogleAI();
     const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Generate response
-    const result = await model.generateContent([{ text: message }]);
+    const result = await model.generateContent([{ text: `${personaPrompt} ${message}` }]);
     const response = await result.response;
     const generatedMessage = await response.text();
 
@@ -42,6 +48,7 @@ export const generateChatCompletion = async (
       id: randomUUID(),
       role: "assistant",
       content: generatedMessage,
+      persona: user.persona,
     });
 
     await user.save();

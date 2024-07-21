@@ -29,9 +29,11 @@ function isCodeBlock(str: string) {
 const ChatItem = ({
   content,
   role,
+  persona,
 }: {
   content: string;
   role: "user" | "assistant";
+  persona: string;
 }) => {
   const messageBlocks = extractCodeFromString(content);
   const auth = useAuth();
@@ -50,6 +52,7 @@ const ChatItem = ({
         <img src="openai.png" alt="openai" width={"30px"} />
       </Avatar>
       <Box>
+        <Typography sx={{ fontSize: "16px", fontStyle: "italic" }}>{persona}</Typography>
         {!messageBlocks && (
           <Typography sx={{ fontSize: "20px" }}>{content}</Typography>
         )}
@@ -77,15 +80,16 @@ const ChatItem = ({
       }}
     >
       <Avatar sx={{ ml: "0", bgcolor: "black", color: "white" }}>
-      {(() => {
-    const fullName = auth?.user?.name || '';
-    const nameParts = fullName.split(" ");
-    const firstNameInitial = nameParts[0]?.[0] || '';
-    const lastNameInitial = nameParts[1]?.[0] || '';
-    return firstNameInitial + lastNameInitial;
-  })()}
+        {(() => {
+          const fullName = auth?.user?.name || '';
+          const nameParts = fullName.split(" ");
+          const firstNameInitial = nameParts[0]?.[0] || '';
+          const lastNameInitial = nameParts[1]?.[0] || '';
+          return firstNameInitial + lastNameInitial;
+        })()}
       </Avatar>
       <Box>
+        <Typography sx={{ fontSize: "16px", fontStyle: "italic" }}>{persona}</Typography>
         {!messageBlocks && (
           <Typography sx={{ fontSize: "20px" }}>{content}</Typography>
         )}
