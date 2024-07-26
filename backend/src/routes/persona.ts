@@ -5,7 +5,7 @@ const personaRoutes = express.Router();
 
 personaRoutes.post("/select", async (req, res) => {
   const { persona, customPrompt } = req.body;
-  const userId = req.user.id; // Assume you have middleware to get the authenticated user
+  const userId = req.body.user.email; // Assume you have middleware to get the authenticated user
   // Save the selected persona and customPrompt to the database
   // Redirect path based on persona
   res.json({ redirectPath: `/persona.${persona}-${userId}` });

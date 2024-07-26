@@ -3,6 +3,8 @@ import User, { Chat } from "../models/User.js";
 import { hash, compare } from "bcrypt";
 import { createToken } from "../utils/token-manager.js";
 import { COOKIE_NAME } from "../utils/constants.js";
+import { randomUUID } from "crypto";
+import {configureGoogleAI} from "../config/gemini-config.js" 
 
 
 export const getAllUsers = async (
@@ -62,45 +64,12 @@ export const userLogin = async (
   }
 };
 
-
-// Persona selection controller
-import { randomUUID } from "crypto";
-import { configureGoogleAI } from "../config/gemini-config.js";
-
-export const selectPersona = async (req, res) => {
-  const { persona, customPrompt } = req.body;
-
-  try {
-    const user = await User.findById(res.locals.jwtData.id);
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
-
-    user.persona = persona;
-    if (persona === 'custom') {
-      user.customPrompt = customPrompt;
-    } else {
-      user.customPrompt = '';
-    }
-
-    await user.save();
-
-    const shortUrl = `/persona.${persona}-${user._id}`;
-
-    return res.status(200).json({ message: 'Persona selected successfully', redirectPath: shortUrl });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
 export const userSignup = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    //user signup
     const { name, email, password } = req.body;
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(401).send("User already registered");
@@ -108,7 +77,6 @@ export const userSignup = async (
     const user = new User({ name, email, password: hashedPassword });
     await user.save();
 
-    // create token and store cookie
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
       domain: "localhost",
@@ -127,9 +95,7 @@ export const userSignup = async (
       signed: true,
     });
 
-    return res
-      .status(201)
-      .json({ message: "OK", name: user.name, email: user.email });
+    return res.status(201).json({ message: "OK", name: user.name, email: user.email });
   } catch (error) {
     console.log(error);
     return res.status(200).json({ message: "ERROR", cause: error.message });
@@ -201,6 +167,8 @@ export const verifyUser = async (
   try {
     //user token check
     const user = await User.findById(res.locals.jwtData.id);
+    console.log(user);
+    
     if (!user) {
       return res.status(401).send("User not registered OR Token malfunctioned");
     }

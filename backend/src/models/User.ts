@@ -31,8 +31,7 @@ const chatSchema = new Schema<Chat>({
     required: true,
   },
   persona: {
-    type: String,
-    required: true, // Ensure persona is required
+    type: String, // Ensure persona is required
   },
 });
 
@@ -52,8 +51,7 @@ const userSchema = new Schema<UserDocument>({
   },
   chats: [chatSchema],
   persona: {
-    type: String,
-    required: true, // Ensure persona is required
+    type: String // Ensure persona is required
   },
   customPrompt: {
     type: String,

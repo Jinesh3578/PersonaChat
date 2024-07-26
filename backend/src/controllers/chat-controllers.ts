@@ -8,7 +8,7 @@ export const generateChatCompletion = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { message } = req.body;
+  const { message, persona } = req.body;
   try {
     const user = await User.findById(res.locals.jwtData.id);
     if (!user) {
@@ -20,7 +20,7 @@ export const generateChatCompletion = async (
       id: randomUUID(),
       role: "user",
       content: message,
-      persona: user.persona,
+      persona, // store persona with chat
     };
 
     // Push new chat entry to user's chats array
@@ -28,10 +28,10 @@ export const generateChatCompletion = async (
 
     // Prepare prompt based on persona
     let personaPrompt = "";
-    if (user.persona === "custom") {
+    if (persona === "custom") {
       personaPrompt = user.customPrompt;
     } else {
-      personaPrompt = `You are a ${user.persona} personality.`;
+      personaPrompt = `You are a ${persona} personality.`;
     }
 
     // Send all chats with new one to Google AI API
@@ -48,7 +48,7 @@ export const generateChatCompletion = async (
       id: randomUUID(),
       role: "assistant",
       content: generatedMessage,
-      persona: user.persona,
+      persona: persona.name, // store persona with chat
     });
 
     await user.save();
@@ -58,7 +58,6 @@ export const generateChatCompletion = async (
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
-
 export const sendChatsToUser = async (
   req: Request,
   res: Response,
