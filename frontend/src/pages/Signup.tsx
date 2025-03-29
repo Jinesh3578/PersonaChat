@@ -26,7 +26,7 @@ const Signup = () => {
   };
   useEffect(() => {
     if (auth?.user) {
-      return navigate("/chat");
+      return navigate("/persona");
     }
   }, [auth]);
   return (

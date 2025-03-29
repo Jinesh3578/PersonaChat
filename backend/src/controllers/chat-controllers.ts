@@ -2,16 +2,13 @@ import { NextFunction, Request, Response } from "express";
 import User, { UserDocument, Chat } from "../models/User.js";
 import { randomUUID } from "crypto";
 import { configureGoogleAI } from "../config/gemini-config.js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
-
-// Controller functions
 export const generateChatCompletion = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { message } = req.body;
+  const { message, persona } = req.body;
   try {
     const user = await User.findById(res.locals.jwtData.id);
     if (!user) {
@@ -23,17 +20,26 @@ export const generateChatCompletion = async (
       id: randomUUID(),
       role: "user",
       content: message,
+      persona, // store persona with chat
     };
 
     // Push new chat entry to user's chats array
     user.chats.push(newChat);
+
+    // Prepare prompt based on persona
+    let personaPrompt = "";
+    if (persona === "custom") {
+      personaPrompt = user.customPrompt;
+    } else {
+      personaPrompt = `You are a ${persona} personality.`;
+    }
 
     // Send all chats with new one to Google AI API
     const client = configureGoogleAI();
     const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Generate response
-    const result = await model.generateContent([{ text: message }]);
+    const result = await model.generateContent([{ text: `${personaPrompt} ${message}` }]);
     const response = await result.response;
     const generatedMessage = await response.text();
 
@@ -42,6 +48,7 @@ export const generateChatCompletion = async (
       id: randomUUID(),
       role: "assistant",
       content: generatedMessage,
+      persona: persona.name, // store persona with chat
     });
 
     await user.save();
@@ -51,7 +58,6 @@ export const generateChatCompletion = async (
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
-
 export const sendChatsToUser = async (
   req: Request,
   res: Response,

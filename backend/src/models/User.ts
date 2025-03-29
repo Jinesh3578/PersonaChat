@@ -5,6 +5,7 @@ export interface Chat {
   id: string;
   role: string;
   content: string;
+  persona: string; // Add persona field
 }
 
 export interface UserDocument extends Document {
@@ -12,6 +13,8 @@ export interface UserDocument extends Document {
   email: string;
   password: string;
   chats: Chat[];
+  persona: string; // Add persona field
+  customPrompt: string; // Add customPrompt field for custom personas
 }
 
 const chatSchema = new Schema<Chat>({
@@ -26,6 +29,9 @@ const chatSchema = new Schema<Chat>({
   content: {
     type: String,
     required: true,
+  },
+  persona: {
+    type: String, // Ensure persona is required
   },
 });
 
@@ -44,6 +50,13 @@ const userSchema = new Schema<UserDocument>({
     required: true,
   },
   chats: [chatSchema],
+  persona: {
+    type: String // Ensure persona is required
+  },
+  customPrompt: {
+    type: String,
+    default: '',
+  },
 });
 
 export default mongoose.model<UserDocument>("User", userSchema);
