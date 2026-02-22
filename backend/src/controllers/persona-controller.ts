@@ -20,8 +20,8 @@ export const selectPersona = async (req: Request, res: Response, next: NextFunct
 
     await user.save();
 
-    // Redirect path
-    const shortUrl = `/persona.${persona}-${user._id}`;
+  // Redirect path
+  const shortUrl = `/persona/${persona}`;
 
     // Optional: Train the Gemini model with the selected persona description
     if (persona !== 'custom') {

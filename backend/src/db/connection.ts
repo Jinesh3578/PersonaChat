@@ -17,4 +17,5 @@ async function disconnectFromDatabase() {
   }
 }
 
+
 export { connectToDatabase, disconnectFromDatabase };

@@ -12,27 +12,43 @@ import {
 } from '../helpers/api-communicator';
 import toast from 'react-hot-toast';
 
+type Personality = {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+};
+
 type Message = {
   role: 'user' | 'assistant';
   content: string;
   persona: string;
 };
 
-const Chat = ({ selectedPersona }) => {
-  const { personaId } = useParams();
+interface ChatProps {
+  selectedPersona?: Personality;
+}
+
+const Chat: React.FC<ChatProps> = ({ selectedPersona }) => {
+  const { name: personaId } = useParams();
+  // Ensure persona is always a string
+  const persona: string = personaId ? personaId : (selectedPersona && selectedPersona.id ? selectedPersona.id : "");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const auth = useAuth();
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
+
+  // persona is already determined above
 
   const handleSubmit = async () => {
     const content = inputRef.current?.value as string;
     if (inputRef && inputRef.current) {
       inputRef.current.value = '';
     }
-    const newMessage: Message = { role: 'user', content, persona: selectedPersona.name };
+    if (!persona) return;
+    const newMessage: Message = { role: 'user', content, persona };
     setChatMessages((prev) => [...prev, newMessage]);
-    const chatData = await sendChatRequest(content, selectedPersona.name);
+    const chatData = await sendChatRequest(content, persona);
     setChatMessages([...chatData.chats]);
   };
 
@@ -49,7 +65,7 @@ const Chat = ({ selectedPersona }) => {
   };
 
   useLayoutEffect(() => {
-    if (auth?.isLoggedIn && auth.user) {
+    if (auth?.isLoggedIn && auth.user && selectedPersona) {
       toast.loading('Loading Chats', { id: 'loadchats' });
       getUserChats()
         .then((data) => {
@@ -61,13 +77,13 @@ const Chat = ({ selectedPersona }) => {
           toast.error('Loading Failed', { id: 'loadchats' });
         });
     }
-  }, [auth]);
+  }, [auth, navigate, selectedPersona]);
 
   useEffect(() => {
     if (!auth?.user) {
-      return navigate('/login');
+      navigate('/login');
     }
-  }, [auth]);
+  }, [auth, navigate]);
 
   return (
     <Box
@@ -116,10 +132,10 @@ const Chat = ({ selectedPersona }) => {
             })()}
           </Avatar>
           <Typography sx={{ mx: 'auto', fontFamily: 'work sans' }}>
-            You are talking to {selectedPersona.name}
+            You are talking to {selectedPersona ? selectedPersona.name : 'Unknown Persona'}
           </Typography>
           <Typography sx={{ mx: 'auto', fontFamily: 'work sans', my: 4, p: 3 }}>
-            {selectedPersona.description}
+            {selectedPersona ? selectedPersona.description : ''}
           </Typography>
           <Button
             onClick={handleDeleteChats}
