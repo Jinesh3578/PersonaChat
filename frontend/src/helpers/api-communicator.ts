@@ -1,6 +1,7 @@
 import axios from "axios";
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+axios.defaults.withCredentials = true; // Bug 6 fix: send cookies with every request
 
 export const loginUser = async (email: string, password: string) => {
   const res = await axios.post("/user/login", { email, password });
@@ -28,6 +29,15 @@ export const checkAuthStatus = async () => {
   const res = await axios.get("/user/auth-status");
   if (res.status !== 200) {
     throw new Error("Unable to authenticate");
+  }
+  const data = await res.data;
+  return data;
+};
+
+export const selectPersona = async (personaId: string, customPrompt?: string) => {
+  const res = await axios.post("/persona/select", { persona: personaId, customPrompt });
+  if (res.status !== 200) {
+    throw new Error("Unable to select persona");
   }
   const data = await res.data;
   return data;

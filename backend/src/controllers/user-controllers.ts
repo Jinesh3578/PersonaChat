@@ -1,10 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import User, { Chat } from "../models/User.js";
+import User from "../models/User.js";
 import { hash, compare } from "bcrypt";
 import { createToken } from "../utils/token-manager.js";
 import { COOKIE_NAME } from "../utils/constants.js";
-import { randomUUID } from "crypto";
-import {configureGoogleAI} from "../config/gemini-config.js" 
 
 
 export const getAllUsers = async (
@@ -99,63 +97,6 @@ export const userSignup = async (
   } catch (error) {
     console.log(error);
     return res.status(200).json({ message: "ERROR", cause: error.message });
-  }
-};
-
-// Chat generation and storing in database
-export const generateChatCompletion = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { message, persona } = req.body;
-  try {
-    const user = await User.findById(res.locals.jwtData.id);
-    if (!user) {
-      return res.status(401).json({ message: "User not registered OR Token malfunctioned" });
-    }
-
-    // Create new chat entry
-    const newChat: Chat = {
-      id: randomUUID(),
-      role: "user",
-      content: message,
-      persona, // store persona with chat
-    };
-
-    // Push new chat entry to user's chats array
-    user.chats.push(newChat);
-
-    // Prepare prompt based on persona
-    let personaPrompt = "";
-    if (persona === "custom") {
-      personaPrompt = user.customPrompt;
-    } else {
-      personaPrompt = `You are a ${persona} personality.`;
-    }
-
-    // Send all chats with new one to Google AI API
-    const client = configureGoogleAI();
-    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    // Generate response
-    const result = await model.generateContent([{ text: `${personaPrompt} ${message}` }]);
-    const response = await result.response;
-    const generatedMessage = await response.text();
-
-    // Push AI generated response to user's chats array
-    user.chats.push({
-      id: randomUUID(),
-      role: "assistant",
-      content: generatedMessage,
-      persona, // store persona with chat
-    });
-
-    await user.save();
-    return res.status(200).json({ chats: user.chats });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Something went wrong" });
   }
 };
 

@@ -36,7 +36,7 @@ export const generateChatCompletion = async (
 
     // Send all chats with new one to Google AI API
     const client = configureGoogleAI();
-    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Generate response
     const result = await model.generateContent([{ text: `${personaPrompt} ${message}` }]);
@@ -48,7 +48,7 @@ export const generateChatCompletion = async (
       id: randomUUID(),
       role: "assistant",
       content: generatedMessage,
-      persona: persona.name, // store persona with chat
+      persona, // store persona with chat
     });
 
     await user.save();

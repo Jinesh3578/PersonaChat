@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import User from "../models/User.js";
-import { configureGoogleAI } from "../config/gemini-config.js";
 
 export const selectPersona = async (req: Request, res: Response, next: NextFunction) => {
   const { persona, customPrompt } = req.body;
@@ -13,25 +12,14 @@ export const selectPersona = async (req: Request, res: Response, next: NextFunct
 
     user.persona = persona;
     if (persona === 'custom') {
-      user.customPrompt = customPrompt;
+      user.customPrompt = customPrompt || '';
     } else {
       user.customPrompt = '';
     }
 
     await user.save();
 
-  // Redirect path
-  const shortUrl = `/persona/${persona}`;
-
-    // Optional: Train the Gemini model with the selected persona description
-    if (persona !== 'custom') {
-      let instruction = persona;
-      const client = configureGoogleAI();
-      const model = client.getGenerativeModel({ model: "gemini-1.5-flash" ,systemInstruction : instruction });
-       // Assuming a trainPersona method exists
-    }
-
-    return res.status(200).json({ message: 'Persona selected successfully', redirectPath: shortUrl });
+    return res.status(200).json({ message: 'Persona selected successfully', persona });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Internal server error' });

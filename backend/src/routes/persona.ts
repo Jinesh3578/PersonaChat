@@ -2,18 +2,11 @@
 
 import express from "express";
 import { selectPersona } from "../controllers/persona-controller.js";
+import { verifyToken } from "../utils/token-manager.js";
 
 const personaRoutes = express.Router();
 
-personaRoutes.post("/select", selectPersona);
-
-personaRoutes.post("/chat/new", async (req, res) => {
-  const { message, persona } = req.body;
-  // For now, return mock response
-  res.json({ chats: [
-    { role: 'user', content: message, persona },
-    { role: 'assistant', content: `Hello! You are chatting as ${persona}.`, persona }
-  ] });
-});
+// Bug 1 fix: Added verifyToken middleware so res.locals.jwtData is populated
+personaRoutes.post("/select", verifyToken, selectPersona);
 
 export default personaRoutes;

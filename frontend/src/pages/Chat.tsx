@@ -4,7 +4,7 @@ import red from '@mui/material/colors/red';
 import { useAuth } from '../context/AuthContext';
 import ChatItem from '../components/chat/ChatItem';
 import { IoMdSend } from 'react-icons/io';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   deleteUserChats,
   getUserChats,
@@ -25,31 +25,30 @@ type Message = {
   persona: string;
 };
 
-interface ChatProps {
-  selectedPersona?: Personality;
-}
-
-const Chat: React.FC<ChatProps> = ({ selectedPersona }) => {
-  const { name: personaId } = useParams();
-  // Ensure persona is always a string
-  const persona: string = personaId ? personaId : (selectedPersona && selectedPersona.id ? selectedPersona.id : "");
+const Chat = () => {
+  const location = useLocation();
+  const selectedPersona: Personality | undefined = location.state?.selectedPersona;
+  const persona: string = selectedPersona?.id || '';
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const auth = useAuth();
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-
-  // persona is already determined above
 
   const handleSubmit = async () => {
     const content = inputRef.current?.value as string;
     if (inputRef && inputRef.current) {
       inputRef.current.value = '';
     }
-    if (!persona) return;
+    if (!persona || !content?.trim()) return;
     const newMessage: Message = { role: 'user', content, persona };
     setChatMessages((prev) => [...prev, newMessage]);
-    const chatData = await sendChatRequest(content, persona);
-    setChatMessages([...chatData.chats]);
+    try {
+      const chatData = await sendChatRequest(content, persona);
+      setChatMessages([...chatData.chats]);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to send message');
+    }
   };
 
   const handleDeleteChats = async () => {
@@ -77,13 +76,16 @@ const Chat: React.FC<ChatProps> = ({ selectedPersona }) => {
           toast.error('Loading Failed', { id: 'loadchats' });
         });
     }
-  }, [auth, navigate, selectedPersona]);
+  }, [auth, selectedPersona]);
 
+  // Redirect to persona selection if no persona is available or not logged in
   useEffect(() => {
     if (!auth?.user) {
       navigate('/login');
+    } else if (!selectedPersona) {
+      navigate('/persona');
     }
-  }, [auth, navigate]);
+  }, [auth, navigate, selectedPersona]);
 
   return (
     <Box
@@ -132,7 +134,7 @@ const Chat: React.FC<ChatProps> = ({ selectedPersona }) => {
             })()}
           </Avatar>
           <Typography sx={{ mx: 'auto', fontFamily: 'work sans' }}>
-            You are talking to {selectedPersona ? selectedPersona.name : 'Unknown Persona'}
+            You are talking to {selectedPersona ? selectedPersona.name : 'a Persona'}
           </Typography>
           <Typography sx={{ mx: 'auto', fontFamily: 'work sans', my: 4, p: 3 }}>
             {selectedPersona ? selectedPersona.description : ''}
@@ -173,7 +175,7 @@ const Chat: React.FC<ChatProps> = ({ selectedPersona }) => {
             fontWeight: '600',
           }}
         >
-          Model - GPT 3.5 Turbo
+          Gemini AI - {selectedPersona?.name || 'Chat'}
         </Typography>
         <Box
           sx={{
@@ -213,6 +215,9 @@ const Chat: React.FC<ChatProps> = ({ selectedPersona }) => {
               outline: 'none',
               color: 'white',
               fontSize: '20px',
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSubmit();
             }}
           />
           <IconButton onClick={handleSubmit} sx={{ color: 'white', mx: 1 }}>
