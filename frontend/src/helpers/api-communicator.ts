@@ -1,5 +1,7 @@
 import axios from "axios";
 
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+
 export const loginUser = async (email: string, password: string) => {
   const res = await axios.post("/user/login", { email, password });
   if (res.status !== 200) {
@@ -31,8 +33,8 @@ export const checkAuthStatus = async () => {
   return data;
 };
 
-export const sendChatRequest = async (message: string) => {
-  const res = await axios.post("/chat/new", { message });
+export const sendChatRequest = async (message: string, persona: string) => {
+  const res = await axios.post("/chat/new", { message, persona });
   if (res.status !== 200) {
     throw new Error("Unable to send chat");
   }
@@ -43,7 +45,7 @@ export const sendChatRequest = async (message: string) => {
 export const getUserChats = async () => {
   const res = await axios.get("/chat/all-chats");
   if (res.status !== 200) {
-    throw new Error("Unable to send chat");
+    throw new Error("Unable to get chats");
   }
   const data = await res.data;
   return data;
@@ -61,7 +63,7 @@ export const deleteUserChats = async () => {
 export const logoutUser = async () => {
   const res = await axios.get("/user/logout");
   if (res.status !== 200) {
-    throw new Error("Unable to delete chats");
+    throw new Error("Unable to logout");
   }
   const data = await res.data;
   return data;
