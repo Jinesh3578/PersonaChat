@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { IoIosLogIn } from "react-icons/io";
 import { Box, Typography, Button } from "@mui/material";
 import CustomizedInput from "../components/shared/CustomizedInput";
@@ -19,16 +19,12 @@ const Signup = () => {
       toast.loading("Signing Up", { id: "signup" });
       await auth?.signup(name, email, password);
       toast.success("Signed Up Successfully", { id: "signup" });
+      navigate("/persona");
     } catch (error) {
       console.log(error);
       toast.error("Signing Up Failed", { id: "signup" });
     }
   };
-  useEffect(() => {
-    if (auth?.user) {
-      return navigate("/persona");
-    }
-  }, [auth]);
   return (
     <Box width={"100%"} height={"100%"} display="flex" flex={1}>
       <Box padding={8} mt={8} display={{ md: "flex", sm: "none", xs: "none" }}>
